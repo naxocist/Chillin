@@ -1,8 +1,11 @@
 from discord.ext import commands
-from random import *
-from data_process import *
 import discord
+from data_process import *
+from random import *
 import asyncio
+import requests
+from bs4 import BeautifulSoup
+from pprint import pprint
 
 gif_list = ["https://c.tenor.com/c3ks1DYnyr4AAAAC/anime-anime-girl.gif",
             "https://c.tenor.com/czmwFLhXJQ0AAAAC/anime-i-dont-know.gif",
@@ -82,6 +85,69 @@ class utilities(commands.Cog):
     await discord.Message.add_reaction(msg, choice(r_possible)) if r_possible else await discord.Message.add_reaction(msg, "🔥")
 
 
+  @commands.command(aliases=["ha"])
+  @commands.is_nsfw()
+  async def hentaianime(self, ctx):
+    anime = choice(nsfw)
+    embed = discord.Embed(title=f"{anime}", url=link[anime], colour=discord.Colour.random())
+
+    episode = "`1` ep" if ep[anime] == '1' else f"`{ep[anime]}`" + " eps"
+    ss = "not specified" if episode == "The movie" else season[anime]
+    image = pic[anime]
+    ranked = rank[anime]
+    g_list = nsfw_genre[nsfw.index(anime)]
+    g_list.insert(3, "\n")
+    g_value = ' '.join([f"`{g.capitalize()}`" for g in g_list])
+    embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar.url)
+
+    embed.add_field(name="Genre", value=g_value, inline=False)
+    embed.add_field(name="Season", value=f"`{ss}`", inline=True)
+    embed.add_field(name="Length", value=episode, inline=True)
+    embed.add_field(name=f"`{ranked}`", value="-" * 39, inline=False)
+
+    embed.set_image(url=image)
+
+    msg = await ctx.send(embed=embed)
+    await discord.Message.add_reaction(msg, "📬")
+    await discord.Message.add_reaction(msg, "💪")
+  
+
+  @commands.command(aliases=['d'])  # random doujin [optional code]
+  @commands.is_nsfw()
+  async def doujin(self, ctx, code=""):
+    code = code.strip()
+    url = 'https://nhentai.net/g/' + code if code else "https://nhentai.net/random/"
+    async with ctx.typing():
+      request = requests.get(url).text
+      soup = BeautifulSoup(request, 'html.parser')
+      await asyncio.sleep(0.1)
+    error = soup.find("div", class_="container error")
+    if error:
+      green = randint(0, 150)
+      embed = discord.Embed(title="What's that sauce", 
+                            description="> Fake sauce!", 
+                            color=discord.Colour.from_rgb(224, green, 0))
+      await ctx.send(embed=embed)
+    else:
+      pic = soup.find("img", class_="lazyload")['data-src']
+      name_list = soup.find("h1", class_="title")
+      name = [i.text for i in name_list]
+      id = soup.find("h3", id="gallery_id").text
+      embed = discord.Embed(title=name[0] + name[1] + name[2], 
+                            url=f"https://nhentai.net/g/{id[1:]}",
+                            color=discord.Colour.random())
+      
+      if code:
+        embed.add_field(name=f"Sauce # `{code}` delivered!", value="Verified Sauce! Here you go.")
+      else:
+        embed.add_field(name=f"Random sauce => # `{id}` delivered!", value="`There you go!`")
+
+      embed.set_image(url=pic)
+      msg = await ctx.send(embed=embed)
+      await discord.Message.add_reaction(msg, "📬")
+      await discord.Message.add_reaction(msg, "👍🏻")
+
+
   @commands.command(aliases=['pf'])
   async def profile(self, ctx):
     profile = discord.Embed(color=discord.Colour.from_rgb(0, 255, 255))
@@ -90,17 +156,16 @@ class utilities(commands.Cog):
 
 
   @commands.command()
-  async def help(self, ctx):  # help function
+  async def help(self, ctx): # show help menu
     client = self.client
     page= "Page"
-    invite = "https://discord.com/api/oauth2/authorize?client_id=877425384864501760&permissions=137439308864&scope=bot"
-    server = "https://discord.gg/3sAYuxc3aF"
+    invite = "https://discord.com/oauth2/authorize?client_id=877425384864501760"
     me = "Naxocist#2982"
 
     p1 = discord.Embed(title="Just to mention the `SYMBOLS`...", color=discord.Colour.green())
     p1.set_thumbnail(url=choice(gif_list))
     p1.add_field(name="You can keep this anime in DM!", value="> 📬", inline=True)
-    p1.add_field(name="Contact", value=f"[Invite!]({invite}) | [Server]({server})\n`{me}` ", inline=False)
+    p1.add_field(name="Contact", value=f"[Invite!]({invite})\n`{me}` ", inline=False)
     p1.set_footer(text=page + f" 1/2")
 
     p2 = discord.Embed(title="Commands", color=discord.Colour.green())

@@ -20,20 +20,27 @@ class events(commands.Cog):
 
   @commands.Cog.listener()
   async def on_command_error(self, ctx, error):
-    print(error)
-    if isinstance(error, commands.CommandNotFound):
-      return
-        
-    elif isinstance(error, commands.MissingPermissions):
-      permission_warn = "You're not allowed to do that!"
-      await ctx.send(embed=discord.Embed(title=permission_warn, color=discord.Colour.red()))
 
-    elif isinstance(error, commands.errors.CommandOnCooldown):
-      cooldown_warn = f"`Cooling down! try again in {int(error.retry_after)}s.`"
-      await ctx.send(cooldown_warn)
-        
-    else:
-      raise error.original
+    try:
+      if isinstance(error, commands.CommandNotFound):
+        return
+          
+      elif isinstance(error, commands.MissingPermissions):
+        permission_warn = "You're not allowed to do that!"
+        await ctx.send(embed=discord.Embed(title=permission_warn, color=discord.Colour.red()))
+
+      elif isinstance(error, commands.errors.CommandOnCooldown):
+        cooldown_warn = f"`Cooling down! try again in {int(error.retry_after)}s.`"
+        await ctx.send(cooldown_warn)
+          
+      elif isinstance(error, commands.errors.NSFWChannelRequired):
+        nsfw_warn = "⚠ This is not `N S F W` channel!"
+        await ctx.send(embed=discord.Embed(title=nsfw_warn, color=discord.Colour.from_rgb(225, 225, 0)))
+
+      else:
+        raise error.original
+    except Exception as e:
+      print(e)
 
 
 async def setup(client):
